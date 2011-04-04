@@ -1,5 +1,5 @@
 
-The AVR Studio version of CompassesRAwesome rover mission software
+The AVR Studio version of CompassRAwesome rover mission software
 
 RELEASE NOTES:
 
