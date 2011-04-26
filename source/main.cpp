@@ -1,81 +1,92 @@
 
-#include "ArduinoRoverLib.h"
 #include "main.h"
 
-int HMC6352Address = 0x42;
+// Need to test on hardware
+HMC6352compass compass;
+// Need to test on hardware
+PID <uint16_t>pid;
+
+// Used elsewhere - should be working
+EEPROMClass EEPROM;
+// Objects for the left and right motors.  PWM frequency is 64kHz
+AF_DCMotor motor_l(3, MOTOR12_64KHZ);
+AF_DCMotor motor_r(4, MOTOR12_64KHZ);
+// 0.9 degrees/step stepper motor (100 steps = 180 degrees)
+AF_Stepper motor_s(200, 1);
+
+// array to story the objects found in a room
+uint16_t room_map[200];
+ 	
 
 // This is calculated in the setup() function
-int slaveAddress;
-int ledPin = 13;
-int sp=0;
-int pv = 0;
-int err = 0;
-int p = 0;
-int rm = 0;
-int lm = 0;
-int kp=3;
-int rm_ref = 97;
-int lm_ref = 97;
-int lostTest = 0;
-int foundIt = 0;
-boolean ledState = false;
-byte headingData[2];
-int i, headingValue,timer;
+//int slaveAddress;
+//int ledPin = 13;
+//int sp=0;
+//int pv = 0;
+//int err = 0;
+//int p = 0;
+//int rm = 0;
+//int lm = 0;
+//int kp=3;
+//int rm_ref = 97;
+//int lm_ref = 97;
+//int lostTest = 0;
+//int foundIt = 0;
+//boolean ledState = false;
+//byte headingData[2];
+//int i, headingValue,timer;
 //IR Variables
-int plaqueDist;
-int startingLong = 999;
-int startingShort = 999;
-byte sensorPin0=0;
-byte sensorPin1=1;
-volatile uint16_t dn;
-word shortRange; // same as unsigned int
-word longRange;
+//int plaqueDist;
+//int startingLong = 999;
+//int startingShort = 999;
+//byte sensorPin0=0;
+//byte sensorPin1=1;
+//volatile uint16_t dn;
+//word shortRange; // same as unsigned int
+//word longRange;
 //word lostTest;
-const int longMinRange = 152; // 101.6 is the actual min, but to reduce possible errors we raised it to 60 because the short Range is more accurate.
-const int longMaxRange = 508;
-const int shortMaxRange = 152;
-const int shortMinRange = 23;
+//const int longMinRange = 152; // 101.6 is the actual min, but to reduce possible errors we raised it to 60 because the short Range is more accurate.
+//const int longMaxRange = 508;
+//const int shortMaxRange = 152;
+//const int shortMinRange = 23;
 //STEPPER MOTOR VARIABLES
-int map_data[400];  // 400 entries x 2 bytes/entry = 800 bytes, ATmega328P has 2,048 bytes of SRAM
+//int map_data[400];  // 400 entries x 2 bytes/entry = 800 bytes, ATmega328P has 2,048 bytes of SRAM
 // verify constants and variables
-int p_angle[plaque_array_size];  // 12 *2 = 24 bytes
-int p_dist[plaque_array_size];
-int p_length = 0;  // number of verified plaques, may be less than
+//int p_angle[plaque_array_size];  // 12 *2 = 24 bytes
+//int p_dist[plaque_array_size];
+//int p_length = 0;  // number of verified plaques, may be less than
 // actual array size if some plaques were not approved
-int lostMap;
-int turnLeft = 0;
-int turnRight = 0;
-int tolerance;
+//int lostMap;
+//int turnLeft = 0;
+//int turnRight = 0;
+//int tolerance;
 // findObjects variables
-int numPlaques;
-int addDistPROM = 100;
-int sensitivity=15; // difference in distance (cm) of mapping data for a
+//int numPlaques;
+//int addDistPROM = 100;
+//int sensitivity=15; // difference in distance (cm) of mapping data for a
                     // plaque to be suspected             
-int minWidth=3;
+//int minWidth=3;
 
 int main(void)
 {
-    // Must be called to configure delay code 
-	// within Arduino IDE architecture
+    // Must be called to configure delay code within Arduino IDE architecture
 	init();
-	
-	
-	
-	
-	
-	
-	
+	// Calibrate the compass if needs be.
+	//compass.enterCalibration();
+		
+	scanEnvironment(room_map);
+
 	// CODE FROM IRONRAD
-	setup();
+	//setup();
 	// Setup the IO test led
-	pinMode(ledPin, OUTPUT);      // sets the digital pin as output
+	pinMode(ONBOARD_LED_PIN, OUTPUT);      // sets the digital pin as output
 	//Serial.begin(57600);
 
 	// enter the main processing loop
 	while(1){
-		digitalWrite(ledPin, HIGH);   // sets the LED on
+		digitalWrite(ONBOARD_LED_PIN, HIGH);   // sets the LED on
   		delay(1000);                  // waits for a second
-  		digitalWrite(ledPin, LOW);    // sets the LED off
+  		digitalWrite(ONBOARD_LED_PIN, LOW);    // sets the LED off
   		delay(1000);
 		Serial.println("We are here again!");
 	
@@ -86,7 +97,36 @@ int main(void)
 	return 0;
 }
 
+//#include <AFMotor.h> 
+//AF_Stepper motor(200, 1);
+//void setup() 
+//{
+ // Serial.begin(9600);           // set up Serial library at 9600 bps
+ // Serial.println("Stepper test!");
+ // motor.setSpeed(25);  // 10 rpm   
+ // motor.step(100, FORWARD, SINGLE); // 100 steps is 180 degrees movement, since the motor goes 360 deg. in 200 steps
+ // motor.release();
+ // delay(1000); // pause of 1 second (1000 milliseconds)
+ // motor.step(100, BACKWARD, SINGLE); // same as FORWARD, but BACKWARD :)
+//}
+//void loop() 
+//{
+  // Here are different types of movement for the Stepper motor.  Will consider trying this if the torque needs
+// to be increased due to the heavy weight of the scan platform.  
+//  motor.step(100, FORWARD, SINGLE); 
+//  motor.step(100, BACKWARD, SINGLE); 
+//
+//  motor.step(100, FORWARD, DOUBLE); 
+//  motor.step(100, BACKWARD, DOUBLE);
+//
+//  motor.step(100, FORWARD, INTERLEAVE); 
+//  motor.step(100, BACKWARD, INTERLEAVE); 
+//
+//  motor.step(100, FORWARD, MICROSTEP); 
+//  motor.step(100, BACKWARD, MICROSTEP); 
+//}
 
+/*
 // CODE FROM IRONRAD
 void loop(){
 	 // from other project
@@ -112,45 +152,11 @@ void setup()
  Serial.println("in setup");
  analogReference(EXTERNAL); // where Vref is 3.3V
  pinMode(ledPin, OUTPUT);          // Set the LED pin as output
- Wire.begin();
- sp=compass();
  motor1.setSpeed(lm_ref);
  motor2.setSpeed(rm_ref);
  motor.setSpeed(10);
  motor.release();
  delay(1000);
-}
-
-int compass()
-{
- // Flash the LED on pin 13 just to show that something is happening
- // Also serves as an indication that we're not "stuck" waiting for TWI data
- ledState = !ledState;
- int myHeading = 0;
- if (ledState) {
-        digitalWrite(ledPin,HIGH);
- }
- else
- {
-        digitalWrite(ledPin,LOW);
- }
- // Send a "A" command to the HMC6352
- // This requests the current heading data
- Wire.beginTransmission(slaveAddress);
- Wire.send("A");                  // The "Get Data" command
- Wire.endTransmission();
- delay(10);
- Wire.requestFrom(slaveAddress, 2);            // Request the 2 byte heading (MSB comes first)
- i = 0;
- while(Wire.available() && i < 2)
- {
-        headingData[i] = Wire.receive();
-        i++;
- }
- headingValue = headingData[0]*256 + headingData[1];  // Put the MSB and LSB together
- myHeading = (headingValue / 10);
- return myHeading;
- delay(20);
 }
 
 
@@ -232,7 +238,7 @@ void driveForward(){
  motor2.setSpeed(rm_ref);
  while(timer<=3){
         timer += 1;
-        pv=compass();
+        //pv=compass();
         err=pv-sp;
         if (err > 180) err -= 360;
         else if (err < -180) err += 360;
@@ -314,7 +320,7 @@ void driveBackward(){
  }
  while(timer<=3){
         timer += 1;
-        pv=compass();
+        //pv=compass();
         err=pv-sp;
         if (err > 180) err -= 360;
         else if (err < -180) err += 360;
@@ -435,7 +441,7 @@ void locateLongTarget(){
          }
         }
         delay(400);
-        sp=compass();
+        //sp=compass();
         motor1.setSpeed(lm_ref);
         motor2.setSpeed(rm_ref);
  }
@@ -493,7 +499,7 @@ void locateShortTarget(){
          }
         }
         delay(400);
-        sp=compass();
+        //sp=compass();
         motor1.setSpeed(lm_ref);
         motor2.setSpeed(rm_ref);
  }
@@ -545,15 +551,14 @@ for (int i = 0; i < 200; i = i++) {
 // cancel extra step
 motor.step(1, BACKWARD, INTERLEAVE);
 Serial.println("difference mapping complete");
-}
-
+}*/
 
 
 /*
 *  Terminal adjust of starting angle
 *  Enter the plus or minus character (+/-) and the number of steps (n = 1 to 9).  
 */
-void tweak(){
+/*void tweak(){
         char ch;                       // used by tweak
         Serial.println("enter +n, -n, or go where n = 1-9 steps and go = start scan");
         while(1)
@@ -732,7 +737,7 @@ void turnToFace(){
         angle = EEPROM.read(3*j) + EEPROM.read((3*j)+1);
         Serial.print("These should be Step Numbers up to 399: ");
         Serial.println(angle);
-        compassAngle = compass();
+        //compassAngle = compass();
         Serial.print("CompassAngle : ");
         Serial.println(compassAngle);
         angle = (angle * 0.9) + compassAngle;
@@ -777,7 +782,7 @@ void turnToFace(){
              Serial.println(angle);
              Serial.print("Compass Reading");
              Serial.println(compassAngle);
-             compassAngle = compass();
+             //compassAngle = compass();
              err = compassAngle - angle;
              if (err > 180) err -= 360;
              else if (err < -180) err += 360;
@@ -885,5 +890,5 @@ lostTest=shortRange;
            Serial.print("you made it home!!!");
          }
         }
-}
+}*/
 

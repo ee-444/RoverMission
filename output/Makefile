@@ -15,7 +15,7 @@ COMMON = -mmcu=$(MCU)
 
 ## Compile options common for all C compilation units.
 CFLAGS = $(COMMON)
-CFLAGS += -Wall -gdwarf-2   -std=c99      -ffunction-sections   -Wl,--gc-sections    -fno-threadsafe-statics                  -DF_CPU=16000000UL -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+CFLAGS += -Wall -gdwarf-2   -std=c99      -ffunction-sections   -Wl,--gc-sections    -fno-threadsafe-statics                        -DF_CPU=16000000UL -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 CFLAGS += -MD -MP -MT $(*F).o -MF dep/$(@F).d 
 
 ## Assembly specific flags
@@ -46,7 +46,7 @@ LIBDIRS = -L"B:\atmel_projects\RoverMission\library"
 LIBS = -lroverarduino 
 
 ## Objects that must be built in order to link
-OBJECTS = main.o 
+OBJECTS = main.o compass.o missiontasks.o pid.o MissionConsole.o 
 
 ## Objects explicitly added by the user
 LINKONLYOBJECTS = 
@@ -56,6 +56,18 @@ all: $(TARGET) RoverMission.hex RoverMission.eep RoverMission.lss size
 
 ## Compile
 main.o: ../source/main.cpp
+	$(CPP) $(INCLUDES) $(CFLAGS) -c  $<
+
+compass.o: ../source/compass.cpp
+	$(CPP) $(INCLUDES) $(CFLAGS) -c  $<
+
+missiontasks.o: ../source/missiontasks.cpp
+	$(CPP) $(INCLUDES) $(CFLAGS) -c  $<
+
+pid.o: ../source/pid.cpp
+	$(CPP) $(INCLUDES) $(CFLAGS) -c  $<
+
+MissionConsole.o: ../source/MissionConsole.cpp
 	$(CPP) $(INCLUDES) $(CFLAGS) -c  $<
 
 ##Link

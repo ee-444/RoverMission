@@ -25,22 +25,31 @@
 #include <string.h>
 #include <math.h>
 
-//! these are helper functions that make C++ more useable in its truest form
+//! AVR files
+#include <avr/pgmspace.h>
+
+//! global project defines
+#define ONBOARD_LED_PIN		13
+#define LONG_RANGE_IR_PIN	3
+#define SHORT_RANGE_IR_PIN	4
+
+//! Resolves linking errors when using arduino core in AVR Studio
 #include "cplusplushelper.h"
 
 //! main include for standard Arduino library
 #include "WProgram.h"
 
 //! additional assist code for Rover Mission
-#include "Wire.h"
 #include "EEPROM.h"
 #include "AFMotor.h"
 
-//! Build objects that were once done elsewhere
-EEPROMClass EEPROM;
-TwoWire Wire;
-AF_DCMotor motor1(1, MOTOR12_64KHZ); 	// create motor #1, 64KHz pwm
-AF_DCMotor motor2(2, MOTOR12_64KHZ); 	// create motor #2, 64KHz pwm
-AF_Stepper motor(200, 2);  				// instantiate a 0.9 degrees/step stepper motor
+#include "rangedata2.h"
+#include "missiontasks.h"
+
+#include "MissionConsole.h"
+
+//! sensors and drivers
+#include "compass.h"
+#include "pid.h"
 
 #endif

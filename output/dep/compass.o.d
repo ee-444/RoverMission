@@ -1,4 +1,4 @@
-main.o: ../source/main.cpp ../source/main.h \
+compass.o: ../source/compass.cpp ../source/compass.h \
  B:\atmel_projects\RoverMission\library/ArduinoRoverLib.h \
  c:\program\ files\atmel\avr\ tools\avr\ toolchain\bin\../lib/gcc/avr/4.4.3/../../../../avr/include/stdio.h \
  c:\program\ files\atmel\avr\ tools\avr\ toolchain\bin\../lib/gcc/avr/4.4.3/../../../../avr/include/inttypes.h \
@@ -34,10 +34,10 @@ main.o: ../source/main.cpp ../source/main.h \
  B:\atmel_projects\RoverMission\source/missiontasks.h \
  B:\atmel_projects\RoverMission\source/MissionConsole.h \
  B:\atmel_projects\RoverMission\source/compass.h \
- B:\atmel_projects\RoverMission\library/Wire.h \
- B:\atmel_projects\RoverMission\source/pid.h
+ B:\atmel_projects\RoverMission\source/pid.h \
+ B:\atmel_projects\RoverMission\library/Wire.h
 
-../source/main.h:
+../source/compass.h:
 
 B:\atmel_projects\RoverMission\library/ArduinoRoverLib.h:
 
@@ -109,6 +109,6 @@ B:\atmel_projects\RoverMission\source/MissionConsole.h:
 
 B:\atmel_projects\RoverMission\source/compass.h:
 
-B:\atmel_projects\RoverMission\library/Wire.h:
-
 B:\atmel_projects\RoverMission\source/pid.h:
+
+B:\atmel_projects\RoverMission\library/Wire.h:
