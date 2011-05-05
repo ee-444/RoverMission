@@ -4,19 +4,196 @@
 // Need to test on hardware
 HMC6352compass compass;
 // Need to test on hardware
-PID <uint16_t>pid;
+PID <double>pid(0.9, 0.01, 1.0);
 
 // Used elsewhere - should be working
 EEPROMClass EEPROM;
 // Objects for the left and right motors.  PWM frequency is 64kHz
 AF_DCMotor motor_l(3, MOTOR12_64KHZ);
 AF_DCMotor motor_r(4, MOTOR12_64KHZ);
-// 0.9 degrees/step stepper motor (100 steps = 180 degrees)
+// 1.8 degrees/step stepper motor (200 steps = 360 degrees)
 AF_Stepper motor_s(200, 1);
 
 // array to story the objects found in a room
-uint16_t room_map[200];
- 	
+uint16_t room_map1[200];
+uint16_t room_map2[200];
+// array of the plaque angles from home
+uint16_t angle_map[5]; 
+
+Cmissionconsole debug;	
+
+int main(void)
+{
+    // Must be called to configure delay code within Arduino IDE architecture
+	init();
+	Serial.begin(57600);
+	analogReference(EXTERNAL);
+	// This is the power up offset from fake_0
+	uint16_t heading_offset = compass.getHeading();
+	//compass.enterCalibration();
+	
+	// testing for IR lab
+	while(1){
+
+		debug.longRangeIR(irDistance(LONG_RANGE_IR_PIN));
+		debug.mediumRangeIR(irDistance(MEDIUM_RANGE_IR_PIN));
+		delay(100);
+	}
+
+	// create a map of the room
+	scanEnvironment(room_map1);
+	// put the plaques in place
+	delay(5000);
+	// make another map with the plaques
+	scanEnvironment(room_map2);
+	// no reason
+	delay(2000);
+	// get the plaque angles from home_offset
+	analyzeRoom(room_map1, room_map2, angle_map);
+
+
+	int16_t tmp_heading = adjustScanPlatform(1) * 18;
+
+	tmp_heading += heading_offset;
+	
+	if (tmp_heading > 3600){
+		tmp_heading -= 3600;
+	}
+
+	turnToFace(tmp_heading);
+
+	heading_offset = tmp_heading;
+
+	adjustScanPlatform(0, 1);
+
+// ******************************************************************
+
+// fake out
+
+	motor_r.setSpeed(150);
+	motor_l.setSpeed(150);
+
+	motor_l.run(FORWARD);
+	motor_r.run(FORWARD);
+	
+	delay(10000);
+
+	motor_l.run(RELEASE);
+	motor_r.run(RELEASE);
+
+	while(1);
+	
+	
+//*******************************************************************	
+	
+	
+	uint8_t ad_res = pgm_read_word(&medium_range_data[readADC(MEDIUM_RANGE_IR_PIN)]);
+	
+	motor_r.setSpeed(150);
+	motor_l.setSpeed(150);
+
+	motor_l.run(FORWARD);
+	motor_r.run(FORWARD);
+
+	uint8_t another_adc;
+
+	while (ad_res > 20){
+	
+		another_adc = pgm_read_word(&medium_range_data[readADC(MEDIUM_RANGE_IR_PIN)]);
+		
+		if (another_adc > ad_res){
+			// fallen and I cant get up
+			motor_l.run(RELEASE);
+			motor_r.run(RELEASE);
+			
+			tmp_heading = heading_offset - 5*18;
+
+			if (tmp_heading < 0){
+				tmp_heading += 3599;
+			}			
+
+			turnToFace(tmp_heading);
+
+			heading_offset = tmp_heading;
+
+			for (int i = 0; i < 10; i++){
+				adjustScanPlatform(i, 1);
+				uint8_t ad_val = pgm_read_word(&medium_range_data[readADC(MEDIUM_RANGE_IR_PIN)]);
+				if(ad_val > ad_res){
+
+				}
+				else{
+					//re-aquire target
+					tmp_heading = heading_offset+ i*18;
+					if (tmp_heading > 3600){
+						tmp_heading -= 3600;
+					}
+					turnToFace(tmp_heading);
+					adjustScanPlatform(i,1);
+					heading_offset = tmp_heading;
+					another_adc = ad_val;
+					motor_r.setSpeed(150);
+					motor_l.setSpeed(150);
+					motor_l.run(FORWARD);
+					motor_r.run(FORWARD);
+					i = 10;
+				}
+			}
+		}
+		ad_res = another_adc;
+	}
+
+	motor_l.run(RELEASE);
+	motor_r.run(RELEASE);
+
+
+
+
+
+	
+	// Testing the stepper manager
+	//adjustStepper(199, 1);
+	//while (adjustStepper(adjustStepper(0)-1, 1) != 0);
+
+	
+	//analyzeRoom(room_map);
+	//adjustStepper(analyzeRoom(room_map), 1);
+	
+	//int16_t angle = analyzeRoom(map);
+	//adjustStepper(angle-180);
+
+
+	// enter the main processing loop
+	while(1){
+		
+	}
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// CODE FROM IRONRAD
+	//setup();
+	// Setup the IO test led
+	//pinMode(ONBOARD_LED_PIN, OUTPUT);      // sets the digital pin as output
+	//Serial.begin(57600);
 
 // This is calculated in the setup() function
 //int slaveAddress;
@@ -67,36 +244,6 @@ uint16_t room_map[200];
                     // plaque to be suspected             
 //int minWidth=3;
 
-int main(void)
-{
-    // Must be called to configure delay code within Arduino IDE architecture
-	init();
-	// Calibrate the compass if needs be.
-	//compass.enterCalibration();
-		
-	scanEnvironment(room_map);
-
-	// CODE FROM IRONRAD
-	//setup();
-	// Setup the IO test led
-	pinMode(ONBOARD_LED_PIN, OUTPUT);      // sets the digital pin as output
-	//Serial.begin(57600);
-
-	// enter the main processing loop
-	while(1){
-		digitalWrite(ONBOARD_LED_PIN, HIGH);   // sets the LED on
-  		delay(1000);                  // waits for a second
-  		digitalWrite(ONBOARD_LED_PIN, LOW);    // sets the LED off
-  		delay(1000);
-		Serial.println("We are here again!");
-	
-		// call the program
-		//loop();
-	}
-        
-	return 0;
-}
-
 //#include <AFMotor.h> 
 //AF_Stepper motor(200, 1);
 //void setup() 
@@ -109,7 +256,7 @@ int main(void)
  // delay(1000); // pause of 1 second (1000 milliseconds)
  // motor.step(100, BACKWARD, SINGLE); // same as FORWARD, but BACKWARD :)
 //}
-//void loop() 
+//void loop() aasdfasdfas
 //{
   // Here are different types of movement for the Stepper motor.  Will consider trying this if the torque needs
 // to be increased due to the heavy weight of the scan platform.  

@@ -30,7 +30,7 @@ main.o: ../source/main.cpp ../source/main.h \
  B:\atmel_projects\RoverMission\library/Print.h \
  B:\atmel_projects\RoverMission\library/EEPROM.h \
  B:\atmel_projects\RoverMission\library/AFMotor.h \
- B:\atmel_projects\RoverMission\source/rangedata2.h \
+ B:\atmel_projects\RoverMission\source/rangedata3.h \
  B:\atmel_projects\RoverMission\source/missiontasks.h \
  B:\atmel_projects\RoverMission\source/MissionConsole.h \
  B:\atmel_projects\RoverMission\source/compass.h \
@@ -101,7 +101,7 @@ B:\atmel_projects\RoverMission\library/EEPROM.h:
 
 B:\atmel_projects\RoverMission\library/AFMotor.h:
 
-B:\atmel_projects\RoverMission\source/rangedata2.h:
+B:\atmel_projects\RoverMission\source/rangedata3.h:
 
 B:\atmel_projects\RoverMission\source/missiontasks.h:
 

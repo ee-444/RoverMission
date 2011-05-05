@@ -41,9 +41,9 @@ private:
 	T _istate;
 	// The caluclated terms
 	struct{
-		float pterm;
-		float iterm;
-		float dterm;
+		double pterm;
+		double iterm;
+		double dterm;
 	}_pid_term;
 	// The stored gains
 	struct{
@@ -73,7 +73,7 @@ public:
      *
      * @ingroup PID-API
      */
-	void setPGain(float gain)	{ _pid_gain.pgain = gain; }
+	void setPGain(T gain)	{ _pid_gain.pgain = gain; }
 	
 	//! Run time access to change the module gain
     /**
@@ -81,7 +81,7 @@ public:
      *
      * @ingroup PID-API
      */
-	void setIGain(float gain)	{ _pid_gain.igain = gain; }
+	void setIGain(T gain)	{ _pid_gain.igain = gain; }
 	
 	//! Run time access to change the module gain
     /**
@@ -89,7 +89,7 @@ public:
      *
      * @ingroup PID-API
      */
-	void setDGain(float gain)	{ _pid_gain.dgain = gain; }
+	void setDGain(T gain)	{ _pid_gain.dgain = gain; }
 
 	//! Return of the currently implemented gain
     /**
@@ -97,7 +97,7 @@ public:
      *
      * @ingroup PID-API
      */
-	float getPGain(void)		{ return _pid_gain.pgain; }
+	T getPGain(void)		{ return _pid_gain.pgain; }
 	
 	//! Return of the currently implemented gain
     /**
@@ -105,7 +105,7 @@ public:
      *
      * @ingroup PID-API
      */
-	float getIGain(void)		{ return _pid_gain.igain; }
+	T getIGain(void)		{ return _pid_gain.igain; }
 	
 	//! Return of the currently implemented gain
     /**
@@ -113,7 +113,7 @@ public:
      *
      * @ingroup PID-API
      */
-	float getDGain(void)		{ return _pid_gain.dgain; }
+	T getDGain(void)		{ return _pid_gain.dgain; }
 
 	//! Change the setpoint for the module calculation
     /**
@@ -142,10 +142,12 @@ public:
 		// get the current error
 		T current_error = _target - input;
 		// look out for max error (if implemented)
-		if (current_error > max_error)
+		if (current_error > max_error){
 			current_error -= (max_error * 2);
-		else if (current_error < -max_error)
+		}
+		else if (current_error < -max_error){
 			current_error += (max_error * 2);
+		}
 		
 		// Create the pTerm - present error
 		_pid_term.pterm = _pid_gain.pgain * current_error;
@@ -154,10 +156,12 @@ public:
 		// create windup protection
 		T windup_protection = static_cast<T>(WINDUP_GUARD_GAIN) / _pid_gain.igain;
 		//protects against excessive positive and negative error
-		if(_istate > windup_protection)
+		if(_istate > windup_protection){
 			_istate = windup_protection;
-		else if(_istate < -windup_protection)
+		}
+		else if(_istate < -windup_protection){
 			_istate = -windup_protection;
+		}
 
 		// Update the iTerm
 		_pid_term.iterm = _istate * _pid_gain.igain;

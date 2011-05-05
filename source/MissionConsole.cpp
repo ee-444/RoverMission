@@ -4,9 +4,9 @@
 Cmissionconsole::Cmissionconsole()
 {
 	// set the baud rate
-	UBRR0 = REG_BAUD_VAL;
+	//UBRR0 = REG_BAUD_VAL;
 	// set the data to 8-bits
-	UCSR0C = 6;
+	//UCSR0C = 6;
 }
 
 Cmissionconsole::~Cmissionconsole()
@@ -17,13 +17,13 @@ Cmissionconsole::~Cmissionconsole()
 void Cmissionconsole::enable()
 {
 	// enable interrupts??  definately TX AND RX enable
-	UCSR0B |= 0x18;
+	//UCSR0B |= 0x18;
 }
 
 void Cmissionconsole::disable()
 {
 	// disable the UART tx and rx
-	UCSR0B = 0;
+	//UCSR0B = 0;
 }
 
 void Cmissionconsole::write(uint8_t in)
@@ -33,6 +33,8 @@ void Cmissionconsole::write(uint8_t in)
 
 void Cmissionconsole::write(char* in)
 {
+	Serial.println(in);
+	return;
 	// keep going until all chars are sent
 	while (*in != 0x00){
 		// wait until the last byte has been transfered

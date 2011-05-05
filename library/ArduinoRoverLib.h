@@ -31,7 +31,8 @@
 //! global project defines
 #define ONBOARD_LED_PIN		13
 #define LONG_RANGE_IR_PIN	3
-#define SHORT_RANGE_IR_PIN	4
+#define MEDIUM_RANGE_IR_PIN	2
+#define SHORT_RANGE_IR_PIN	0
 
 //! Resolves linking errors when using arduino core in AVR Studio
 #include "cplusplushelper.h"
@@ -43,7 +44,7 @@
 #include "EEPROM.h"
 #include "AFMotor.h"
 
-#include "rangedata2.h"
+#include "rangedata3.h"
 #include "missiontasks.h"
 
 #include "MissionConsole.h"
