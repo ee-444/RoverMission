@@ -60,10 +60,10 @@ void goStraight(uint16_t time)
   	motor_r.setSpeed(STRAIGHT_DUTY_CYCLE);
 }
 
-void scanEnvironment(uint16_t* map)
+void scanEnvironment(uint16_t* map, uint16_t map_size)
 {	
 	// now we can move back and start storing sensor data
-	for(uint8_t cnt=0; cnt<200; cnt++){
+	for(uint8_t cnt=0; cnt<map_size; cnt++){
 	/* NEW */
 		map[cnt] = irDistance(LONG_RANGE_IR_PIN);
 		

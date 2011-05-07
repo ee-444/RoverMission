@@ -20,7 +20,35 @@ uint16_t room_map2[200];
 // array of the plaque angles from home
 uint16_t angle_map[5]; 
 
-Cmissionconsole debug;	
+Cmissionconsole debug;
+
+void plaqueDistanceAngle(uint16_t* dist, uint16_t* angle, uint8_t plaque_num, uint16_t& plaque_dist, uint16_t& plaque_angle)
+{
+	if (plaque_num < 2){
+		plaque_num = 2;
+	}
+	// find the distance to the next plaque
+	plaque_dist = sqrt( ( (dist[plaque_num-1] * dist[plaque_num-1]) + 
+						  (dist[plaque_num-2] * dist[plaque_num-2]) -
+						  (2 * dist[plaque_num-2] * dist[plaque_num-1] * cos(angle[plaque_num-1]))
+					    )
+					  );
+	// find the angle to the next plaque
+	plaque_angle = acos( ( (dist[plaque_num-2] * dist[plaque_num-2]) +
+						   (plaque_dist * plaque_dist) - 
+						   (dist[plaque_num-1] * dist[plaque_num-1]) ) / 
+						   (2 * dist[plaque_num-2] * plaque_dist)
+					   );
+	// convert back to degrees
+	plaque_angle *= 180 / PI; 
+
+}
+
+uint16_t dist_1[] = {73,134,68};
+uint16_t angle_1[] = {22,68,71};
+
+uint16_t dist_2[] = {400,200,350};
+uint16_t angle_2[] = {76,82,140};	
 
 int main(void)
 {
@@ -29,8 +57,29 @@ int main(void)
 	Serial.begin(57600);
 	analogReference(EXTERNAL);
 	// This is the power up offset from fake_0
-	uint16_t heading_offset = compass.getHeading();
+	uint16_t heading_offset = 5;//compass.getHeading();
 	//compass.enterCalibration();
+	
+	// plaque testing
+	
+	uint16_t new_dist, new_angle;
+	plaqueDistanceAngle(dist_1, angle_1, 2, new_dist, new_angle);
+
+	Serial.print(new_dist);
+	Serial.println(" - plaque1 dist");
+	Serial.print(new_angle);
+	Serial.println(" - plaque1 angle");
+	
+	plaqueDistanceAngle(dist_2, angle_2, 3, new_dist, new_angle);
+
+	Serial.print(new_dist);
+	Serial.println(" - plaque2 dist");
+	Serial.print(new_angle);
+	Serial.println(" - plaque2 angle");
+
+	while(1){
+	
+	}
 	
 	// testing for IR lab
 	while(1){

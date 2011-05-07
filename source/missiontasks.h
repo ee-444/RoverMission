@@ -18,7 +18,7 @@ const uint8_t ROOM_CONSECUTIVE_CNT	= 3;
 //! mission task #1
 void goStraight(uint16_t time);
 //! mission task #2a
-void scanEnvironment(uint16_t* map);
+void scanEnvironment(uint16_t* map, uint16_t map_size = 200);
 //! mission task #2b
 int16_t analyzeRoom(uint16_t* map);
 //! mission task #2c
