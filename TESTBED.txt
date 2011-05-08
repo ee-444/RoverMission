@@ -1,0 +1,34 @@
+// plaque algorithm testing
+uint16_t dist_1[] = {73,134,68};
+uint16_t angle_1[] = {22,68,71};
+uint16_t dist_2[] = {400,200,350};
+uint16_t angle_2[] = {76,82,140};
+
+uint16_t new_dist, new_angle;
+plaqueDistanceAngle(dist_1, angle_1, 2, new_dist, new_angle);
+Serial.print(new_dist);
+Serial.println(" - plaque1a dist");
+Serial.print(new_angle);
+Serial.println(" - plaque1a angle");
+plaqueDistanceAngle(dist_1, angle_1, 3, new_dist, new_angle);
+Serial.print(new_dist);
+Serial.println(" - plaque1b dist");
+Serial.print(new_angle);
+Serial.println(" - plaque1b angle");
+plaqueDistanceAngle(dist_2, angle_2, 2, new_dist, new_angle);
+Serial.print(new_dist);
+Serial.println(" - plaque2a dist");
+Serial.print(new_angle);
+Serial.println(" - plaque2a angle");
+plaqueDistanceAngle(dist_2, angle_2, 3, new_dist, new_angle);
+Serial.print(new_dist);
+Serial.println(" - plaque2b dist");
+Serial.print(new_angle);
+Serial.println(" - plaque2b angle");
+while(1);
+
+
+
+
+
+

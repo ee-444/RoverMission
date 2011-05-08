@@ -32,7 +32,7 @@
 #define ONBOARD_LED_PIN		13
 #define LONG_RANGE_IR_PIN	3
 #define MEDIUM_RANGE_IR_PIN	2
-#define SHORT_RANGE_IR_PIN	0
+#define SHORT_RANGE_IR_PIN	1
 
 //! Resolves linking errors when using arduino core in AVR Studio
 #include "cplusplushelper.h"

@@ -14,9 +14,11 @@ const uint8_t PID_UPDATE_INTERVAL	= 10;
 
 const uint8_t ROOM_DIFFERENCE_AMOUNT = 100;
 const uint8_t ROOM_CONSECUTIVE_CNT	= 3;
+const uint8_t MAX_PLAQUE_CNT = 5;
 
 //! mission task #1
-void goStraight(uint16_t time);
+void goStraight(uint16_t time=0);
+void stopRobot();
 //! mission task #2a
 void scanEnvironment(uint16_t* map, uint16_t map_size = 200);
 //! mission task #2b
@@ -27,7 +29,9 @@ void findPlaques();
 void analyzeRoom(uint16_t* map1, uint16_t* map2, uint16_t* heading_map);
 
 //! turn to a plaque
-void turnToFace(uint16_t angle);
+void adjustHeading(uint16_t angle, uint8_t dance=0);
+
+void findPlaqueDistanceAngle(uint16_t* dist, uint16_t* angle, uint8_t plaque_num, uint16_t& plaque_dist, uint16_t& plaque_angle);
 
 
 

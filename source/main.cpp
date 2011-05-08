@@ -15,40 +15,15 @@ AF_DCMotor motor_r(4, MOTOR12_64KHZ);
 AF_Stepper motor_s(200, 1);
 
 // array to story the objects found in a room
-uint16_t room_map1[200];
-uint16_t room_map2[200];
+//uint16_t room_map1[200];
+//uint16_t room_map2[200];
 // array of the plaque angles from home
-uint16_t angle_map[5]; 
+//uint16_t angle_map[5]; 
 
 Cmissionconsole debug;
 
-void plaqueDistanceAngle(uint16_t* dist, uint16_t* angle, uint8_t plaque_num, uint16_t& plaque_dist, uint16_t& plaque_angle)
-{
-	if (plaque_num < 2){
-		plaque_num = 2;
-	}
-	// find the distance to the next plaque
-	plaque_dist = sqrt( ( (dist[plaque_num-1] * dist[plaque_num-1]) + 
-						  (dist[plaque_num-2] * dist[plaque_num-2]) -
-						  (2 * dist[plaque_num-2] * dist[plaque_num-1] * cos(angle[plaque_num-1]))
-					    )
-					  );
-	// find the angle to the next plaque
-	plaque_angle = acos( ( (dist[plaque_num-2] * dist[plaque_num-2]) +
-						   (plaque_dist * plaque_dist) - 
-						   (dist[plaque_num-1] * dist[plaque_num-1]) ) / 
-						   (2 * dist[plaque_num-2] * plaque_dist)
-					   );
-	// convert back to degrees
-	plaque_angle *= 180 / PI; 
-
-}
-
-uint16_t dist_1[] = {73,134,68};
-uint16_t angle_1[] = {22,68,71};
-
-uint16_t dist_2[] = {400,200,350};
-uint16_t angle_2[] = {76,82,140};	
+uint16_t dist_map9[]	= {183,91,183};
+uint16_t angle_map9[] = {50,40,29};
 
 int main(void)
 {
@@ -57,48 +32,99 @@ int main(void)
 	Serial.begin(57600);
 	analogReference(EXTERNAL);
 	// This is the power up offset from fake_0
-	uint16_t heading_offset = 5;//compass.getHeading();
+	uint16_t heading_offset = compass.getHeading();
+	Serial.println("Starting!!");
 	//compass.enterCalibration();
-	
-	// plaque testing
-	
-	uint16_t new_dist, new_angle;
-	plaqueDistanceAngle(dist_1, angle_1, 2, new_dist, new_angle);
 
-	Serial.print(new_dist);
-	Serial.println(" - plaque1 dist");
-	Serial.print(new_angle);
-	Serial.println(" - plaque1 angle");
-	
-	plaqueDistanceAngle(dist_2, angle_2, 3, new_dist, new_angle);
+	//goStraight(20000);
 
-	Serial.print(new_dist);
-	Serial.println(" - plaque2 dist");
-	Serial.print(new_angle);
-	Serial.println(" - plaque2 angle");
-
-	while(1){
+	//while(1);
 	
-	}
+	// face first plaque
+	adjustHeading((heading_offset+(angle_map9[0]*10)));
+
+	//adjustScanPlatform(static_cast<float>(angle_map9[0])/1.8);
+
+	// go to first plaque
+	goStraight((dist_map9[0]/83)*10000);
+
+	//stopRobot();
+
+	uint16_t new_distance, new_angle;
+
+	// find second plaque
+	findPlaqueDistanceAngle(dist_map9, angle_map9, 2, new_distance, new_angle);
+
+	Serial.print("new_angle = ");
+	Serial.println(new_angle);
+	Serial.print("new_distance = ");
+	Serial.println(new_distance);
+	// face second plaque
+	adjustHeading(1800-(new_angle*10));
+
+	//adjustScanPlatform(static_cast<float>(new_angle)/1.8);
+
+	// go to second plaque
+	Serial.print("straight time = ");
+	uint16_t tmp_time = (new_distance/83)*10000;
+	Serial.println(tmp_time);
+	goStraight(tmp_time);
+
+	// face 2nd plaque - head on
+	
+	uint16_t asdf = 180 - (180 - (new_angle + angle_map9[1]));
+	asdf *= 10;
+	Serial.print("offset_angle = ");
+	Serial.println(asdf);
+	uint16_t tmp_angle = compass.getHeading();
+	adjustHeading(tmp_angle+asdf);
+	delay(3000);
+	Serial.print("face plaque = ");
+	Serial.println(tmp_angle);
+	tmp_angle = compass.getHeading();
+	adjustHeading(1800+tmp_angle);
+	delay(3000);
+	// find 3rd plaque
+	findPlaqueDistanceAngle(dist_map9, angle_map9, 3, new_distance, new_angle);
+	Serial.print("third plaque angle = ");
+	Serial.println(new_angle);
+	// turn to third plaque
+	tmp_angle = compass.getHeading();
+	adjustHeading((1800-(new_angle*10))+tmp_angle);
+
+	//adjustScanPlatform(static_cast<float>(new_angle)/1.8);
+	Serial.print("third runtime = ");
+	tmp_time = (new_distance/83)*10000;
+	Serial.println(tmp_time);
+	// go to third plaque
+	goStraight(tmp_time);
+
+	//delay(3000);
+
+	//adjustHeading(50000,1);
+
+	while(1);
+
+
+	
 	
 	// testing for IR lab
 	while(1){
-
 		debug.longRangeIR(irDistance(LONG_RANGE_IR_PIN));
 		debug.mediumRangeIR(irDistance(MEDIUM_RANGE_IR_PIN));
 		delay(100);
 	}
 
 	// create a map of the room
-	scanEnvironment(room_map1);
+	//scanEnvironment(room_map1);
 	// put the plaques in place
 	delay(5000);
 	// make another map with the plaques
-	scanEnvironment(room_map2);
+	//scanEnvironment(room_map2);
 	// no reason
 	delay(2000);
 	// get the plaque angles from home_offset
-	analyzeRoom(room_map1, room_map2, angle_map);
+	//analyzeRoom(room_map1, room_map2, angle_map);
 
 
 	int16_t tmp_heading = adjustScanPlatform(1) * 18;
@@ -109,7 +135,7 @@ int main(void)
 		tmp_heading -= 3600;
 	}
 
-	turnToFace(tmp_heading);
+	//turnToFace(tmp_heading);
 
 	heading_offset = tmp_heading;
 
@@ -161,7 +187,7 @@ int main(void)
 				tmp_heading += 3599;
 			}			
 
-			turnToFace(tmp_heading);
+			//turnToFace(tmp_heading);
 
 			heading_offset = tmp_heading;
 
@@ -177,7 +203,7 @@ int main(void)
 					if (tmp_heading > 3600){
 						tmp_heading -= 3600;
 					}
-					turnToFace(tmp_heading);
+					//turnToFace(tmp_heading);
 					adjustScanPlatform(i,1);
 					heading_offset = tmp_heading;
 					another_adc = ad_val;

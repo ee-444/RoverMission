@@ -11,54 +11,74 @@ extern Cmissionconsole debug;
 
 void goStraight(uint16_t time)
 {
-	// find out the millis() start time
-	uint16_t last_millis = millis();
-	// set the pid setpoint with the direction of the compass
-	pid.setTarget(compass.getHeading());
-	time /= PID_UPDATE_INTERVAL;
-	
-	// set up the motors and get them moving straight
 	motor_l.setSpeed(STRAIGHT_DUTY_CYCLE);
   	motor_r.setSpeed(STRAIGHT_DUTY_CYCLE);
   	motor_l.run(FORWARD);
-  	motor_r.run(FORWARD);
-
-	// time per itteration set by caller
-	while( time != 0){	
-		// hold the program while waiting for an update interval
-		// allow serial communication and other processing to occur
-		while ((millis() - last_millis) <= PID_UPDATE_INTERVAL){
-			// use the free running millis() as a timer
-			if (millis() < last_millis){
-				last_millis = 0;	// rollover occured
-			}
-			// processing can occur here - better than a wait statement
-			//-->  <--
-		}
-
-		// update the motors based on the callers request(time)
-		if ((millis() - last_millis) > PID_UPDATE_INTERVAL){
-			// update the last_millis count
-			last_millis += PID_UPDATE_INTERVAL;
-			// get the error from the PID module - 180 degrees the the max desired error
-			uint16_t error = pid.getError(compass.getHeading(), 1800);
-			// update the motors based on the error - converting degree_of_error
-			// to duty_cycle for correction
-			motor_r.setSpeed( constrain((STRAIGHT_DUTY_CYCLE) + error, MIN_DUTY_CYCLE, MAX_DUTY_CYCLE) );
-			motor_l.setSpeed( constrain((STRAIGHT_DUTY_CYCLE) - error, MIN_DUTY_CYCLE, MAX_DUTY_CYCLE) );
-		}
-	
-		// decrement the amount of time that the caller asked for per itteration
-		time--;
+ 	motor_r.run(FORWARD);
+	if (time > 0){
+		delay(time);
+		motor_l.run(RELEASE);
+		motor_r.run(RELEASE);
 	}
+}
 
-	// Stop the motors - we should be either near the home position or at a distance x far from the starting point
+void stopRobot()
+{
 	motor_l.run(RELEASE);
 	motor_r.run(RELEASE);
-	// set the duty cycle staight for the next use
-	motor_l.setSpeed(STRAIGHT_DUTY_CYCLE);
-  	motor_r.setSpeed(STRAIGHT_DUTY_CYCLE);
 }
+
+
+//void goStraight(uint16_t time)
+//{
+//	// find out the millis() start time
+//	uint16_t last_millis = millis();
+//	// set the pid setpoint with the direction of the compass
+//	pid.setTarget(compass.getHeading());
+//	time /= PID_UPDATE_INTERVAL;
+//	
+//	// set up the motors and get them moving straight
+//	motor_l.setSpeed(STRAIGHT_DUTY_CYCLE);
+//  	motor_r.setSpeed(STRAIGHT_DUTY_CYCLE);
+//  	motor_l.run(FORWARD);
+// 	motor_r.run(FORWARD);
+//
+//	// time per itteration set by caller
+//	while( time != 0){	
+//		// hold the program while waiting for an update interval
+//		// allow serial communication and other processing to occur
+//		while ((millis() - last_millis) <= PID_UPDATE_INTERVAL){
+//			// use the free running millis() as a timer
+//			if (millis() < last_millis){
+//				last_millis = 0;	// rollover occured
+//			}
+//			// processing can occur here - better than a wait statement
+//			//-->  <--
+//		}
+//
+//		// update the motors based on the callers request(time)
+//		if ((millis() - last_millis) > PID_UPDATE_INTERVAL){
+//			// update the last_millis count
+//			last_millis += PID_UPDATE_INTERVAL;
+//			// get the error from the PID module - 180 degrees the the max desired error
+//			uint16_t error = pid.getError(compass.getHeading(), 1800);
+//			// update the motors based on the error - converting degree_of_error
+//			// to duty_cycle for correction
+//			motor_r.setSpeed( constrain((STRAIGHT_DUTY_CYCLE) + error, MIN_DUTY_CYCLE, MAX_DUTY_CYCLE) );
+//			motor_l.setSpeed( constrain((STRAIGHT_DUTY_CYCLE) - error, MIN_DUTY_CYCLE, MAX_DUTY_CYCLE) );
+//		}
+//	
+//		// decrement the amount of time that the caller asked for per itteration
+//		time--;
+//	}
+//
+//	// Stop the motors - we should be either near the home position or at a distance x far from the starting point
+//	motor_l.run(RELEASE);
+//	motor_r.run(RELEASE);
+//	// set the duty cycle staight for the next use
+//	motor_l.setSpeed(STRAIGHT_DUTY_CYCLE);
+//  	motor_r.setSpeed(STRAIGHT_DUTY_CYCLE);
+//}
 
 void scanEnvironment(uint16_t* map, uint16_t map_size)
 {	
@@ -76,6 +96,7 @@ void scanEnvironment(uint16_t* map, uint16_t map_size)
 		//debug.longRangeIR(map[cnt-1]);
 		// move the motor and do it again
 		adjustScanPlatform((adjustScanPlatform(0)+1), 1);
+		// allow the platform movement to settle
 		delay(100);
 	}
 	
@@ -94,18 +115,21 @@ void analyzeRoom(uint16_t* map1, uint16_t* map2, uint16_t* heading_map)
 	for (uint8_t index = 0; index < 5; index++){
 		heading_map[index] = 0;
 	}
-
 	// look for the difference in the room
 	for (uint8_t index = 0; index < 200; index++){
 		result = map1[index] - map2[index];
 		result = abs(result);
 		//Serial.println(result);
+		// look for large differences
 		if (result > ROOM_DIFFERENCE_AMOUNT){
+			// the amount of consecutive large differences indicated a plaque
 			if (consecutive_cnt > ROOM_CONSECUTIVE_CNT){
-				//adjustStepper(start, 1);
+				// store the heading to this plaque (degrees * 10)
 				heading_map[result_cnt] = index*18;
+				// look for the max amount of plaques
 				result_cnt++;
-				if (result_cnt == 5){
+				// exit if all the plaques were found
+				if (result_cnt == MAX_PLAQUE_CNT){
 					return;
 				}
 			}
@@ -117,6 +141,28 @@ void analyzeRoom(uint16_t* map1, uint16_t* map2, uint16_t* heading_map)
 	}
 }
 
+void findPlaqueDistanceAngle(uint16_t* dist, uint16_t* angle, uint8_t plaque_num, uint16_t& plaque_dist, uint16_t& plaque_angle)
+{
+	if (plaque_num < 2){
+		plaque_num = 2;
+	}
+
+	double dist1 = static_cast<double>(dist[plaque_num-1]);
+	double dist2 = static_cast<double>(dist[plaque_num-2]);
+	double angle1 = static_cast<double>(angle[plaque_num-1]);
+	// find the distance to the next plaque 
+	double tmp_plaque_dist = sqrt( ( pow(dist1,2) + 
+						  			pow(dist2,2)) - (2 * dist2 * dist1 * (cos((angle1*PI)/180.0)) )
+					  			 );
+	plaque_dist = static_cast<uint16_t>(tmp_plaque_dist);
+	// find the angle to the next plaque
+	double tmp_plaque_angle = acos( ( pow(dist2,2) + pow(plaque_dist,2) - (dist1 * dist1) ) / 
+						   			(2 * dist2 * plaque_dist)
+					   			  );
+	// convert back to degrees
+	tmp_plaque_angle *= 180.00000 / PI; 
+	plaque_angle = static_cast<uint16_t>(tmp_plaque_angle);
+}
 
 
 //	int16_t return_value = -1;	// initialize the return as a failure and change if something is found
@@ -164,7 +210,7 @@ void analyzeRoom(uint16_t* map1, uint16_t* map2, uint16_t* heading_map)
 //	return return_value;
 //}
 
-void turnToFace(uint16_t angle)
+void adjustHeading(uint16_t angle, uint8_t dance)
 {
  	// make sure the heading is valid
 	while (angle > 3599){
@@ -184,7 +230,7 @@ void turnToFace(uint16_t angle)
 	// from desired setting 
 	while(abs(angle - targetOffset) > 50){
     	targetOffset = compass.getHeading();
-    	Serial.println(targetOffset);
+    	//Serial.println(targetOffset);
   	}
   
   	//once desired heading is found turn motors off
@@ -194,7 +240,7 @@ void turnToFace(uint16_t angle)
 
 
 
-// ISSUES WITH SOME OF THE CODE HERE
+// ISSUES WITH SOME OF THE CODE HERE - commented out
 int16_t readADC(uint16_t pin)
 {
 	const uint8_t sample_amout = 100;		// number of real ADC samples
@@ -253,22 +299,22 @@ uint16_t irDistance(uint8_t pin)
 		else{
 			// get the value from flash (offset from all the same values)
 			dist_from_flash = pgm_read_byte(&medium_range_data[tmp_adc_result-MEDIUM_RANGE_OFFSET]);
-			return dist_from_flash*2;
+			return (dist_from_flash*2);
 		}	
 	}
 	// return a result from the long range lookup table
 	else if (pin == LONG_RANGE_IR_PIN){
 		// reduce the size of the lookup table
 		if (tmp_adc_result > (LONG_RANGE_OFFSET+LONG_RANGE_TABLE_SIZE)){
-			return MIN_LONG_RANGE_IR_DISTANCE;
+			return MAX_LONG_RANGE_IR_DISTANCE;
 		}
 		else if (tmp_adc_result < LONG_RANGE_OFFSET){
-			return MAX_LONG_RANGE_IR_DISTANCE;
+			return MIN_LONG_RANGE_IR_DISTANCE;
 		}
 		else{
 			// get the value from flash (offset from all the same values)
 			dist_from_flash = pgm_read_byte(&long_range_data[tmp_adc_result-LONG_RANGE_OFFSET]);
-			return dist_from_flash*2;
+			return (dist_from_flash*2);
 		}	
 	}
 	return 0;
