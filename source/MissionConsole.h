@@ -21,32 +21,35 @@
 
 #include "ArduinoRoverLib.h"
 
-/** Honeywell HMC6352compass software driver (polled)
- * @file	compass.h
- * @brief	An object to communicate with a HMC6352 magno-resistive compass
+/** 
+ * @file	MissionConsole.h
+ * @brief	An object to communicate with a debugging console
  * @version	1.01
  * @see 	__
  * @image 	__ "Caption for the image"
  *
- * @example	HMC6352compass
- *	An example of how to build and use the HMC6352compass object
+ * @example	CMissionConsole
+ *	An example of how to build and use the CMissionconsole class for debugging the rover
  * @code
  * #include "ArduinoRoverLib.h"
  *
- * HMC6352compass compass; 
+ * Cmissionconsole debug; 
  *
  * int main() {
  *	// get the current heading
- *	uint16_t heading = compass.getHeading();
+ *	uint16_t adc_result = readADC(IR_PIN);
+ *	debug.adValue(adc_result);
+ * }
+ * @endcode
  */
 
- 	//! HMC6352compass read method for the last know heading
-	/**  
-     * A method to return the last known heading.  Useful if delta
-	 * heading needs to be calculated
-     *
-	 * @return 	uint16_t containing the last known heading of the sensor
-  	 */ 
+//! HMC6352compass read method for the last know heading
+/**  
+* A method to return the last known heading.  Useful if delta
+* heading needs to be calculated
+*
+* @return 	uint16_t containing the last known heading of the sensor
+*/ 
 
 #ifndef FOSC
 #define FOSC 16000000 // Clock Speed
@@ -56,8 +59,11 @@
 
 //! scope for peripheral library driver software
 //namespace ArduinoLibrary{
-
-//! Mission Console communication class definition
+ 
+/**
+ *	@class Cmissionconsole
+ * 	@brief Mission Console communication class definition
+ */
 class Cmissionconsole{
 
 private:

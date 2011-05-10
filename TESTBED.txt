@@ -1,3 +1,4 @@
+//----------------------------------------------------------------------------------------------------
 // plaque algorithm testing
 uint16_t dist_1[] = {73,134,68};
 uint16_t angle_1[] = {22,68,71};
@@ -26,6 +27,109 @@ Serial.println(" - plaque2b dist");
 Serial.print(new_angle);
 Serial.println(" - plaque2b angle");
 while(1);
+
+//----------------------------------------------------------------------------------------------------
+// PID testing method - needs to be tested
+void goStraight(uint16_t time)
+{
+	// find out the millis() start time
+	uint16_t last_millis = millis();
+	// set the pid setpoint with the direction of the compass
+	pid.setTarget(compass.getHeading());
+	time /= PID_UPDATE_INTERVAL;
+	
+	// set up the motors and get them moving straight
+	motor_l.setSpeed(STRAIGHT_DUTY_CYCLE);
+  	motor_r.setSpeed(STRAIGHT_DUTY_CYCLE);
+  	motor_l.run(FORWARD);
+ 	motor_r.run(FORWARD);
+
+	// time per itteration set by caller
+	while( time != 0){	
+		// hold the program while waiting for an update interval
+		// allow serial communication and other processing to occur
+		while ((millis() - last_millis) <= PID_UPDATE_INTERVAL){
+			// use the free running millis() as a timer
+			if (millis() < last_millis){
+				last_millis = 0;	// rollover occured
+			}
+			// processing can occur here - better than a wait statement
+			//-->  <--
+		}
+
+		// update the motors based on the callers request(time)
+		if ((millis() - last_millis) > PID_UPDATE_INTERVAL){
+			// update the last_millis count
+			last_millis += PID_UPDATE_INTERVAL;
+			// get the error from the PID module - 180 degrees the the max desired error
+			uint16_t error = pid.getError(compass.getHeading(), 1800);
+			// update the motors based on the error - converting degree_of_error
+			// to duty_cycle for correction
+			motor_r.setSpeed( constrain((STRAIGHT_DUTY_CYCLE) + error, MIN_DUTY_CYCLE, MAX_DUTY_CYCLE) );
+			motor_l.setSpeed( constrain((STRAIGHT_DUTY_CYCLE) - error, MIN_DUTY_CYCLE, MAX_DUTY_CYCLE) );
+		}
+	
+		// decrement the amount of time that the caller asked for per itteration
+		time--;
+	}
+
+	// Stop the motors - we should be either near the home position or at a distance x far from the starting point
+	motor_l.run(RELEASE);
+	motor_r.run(RELEASE);
+	// set the duty cycle staight for the next use
+	motor_l.setSpeed(STRAIGHT_DUTY_CYCLE);
+  	motor_r.setSpeed(STRAIGHT_DUTY_CYCLE);
+}
+
+//----------------------------------------------------------------------------------------------------
+// find a plaque dynamically from one sweep - never was consistent
+uint16_t findPlaque(uint16_t* map)
+	int16_t return_value = -1;	// initialize the return as a failure and change if something is found
+	// The amount of difference needed to detect an edge
+	uint8_t valid_edge = 500;
+	uint8_t consecutive_readings = 0;
+	uint16_t on_target = 0;
+	uint16_t tmp_difference = 0;
+	double object_angle = 0.0;
+	bool pass_fail = true;
+
+	for( ; valid_edge > 10; valid_edge -= 20){
+		// find an edge	
+		for (uint8_t cnt=0; cnt<199; cnt++){
+  			// store the difference between the elements and test the difference
+			tmp_difference = abs( map[cnt] - map[cnt+1] );
+			// is this an edge??
+			if(tmp_difference > valid_edge){
+  			// get the angle that will tell us how many consecutive values should be read
+				//object_angle = atan(static_cast<double>(30.4/map[cnt+1]));  	//once edge is found give us angle
+				//object_angle = (object_angle * 180) / PI;
+				//consecutive_readings = (object_angle / 1.8);  	//how many readings we should have based on distance
+				// determines if the target is found - used below
+				pass_fail = true;
+				consecutive_readings = 4;
+				// start at the edge and look for consecutive valid distances
+    			for(uint8_t w = 1; w < (consecutive_readings); w++){
+      				on_target = abs(map[cnt+w] - map[cnt+w]);
+      				// not the plaque if the difference is geater that xx
+					if(on_target > 10){
+        				// force an exit
+						w = consecutive_readings;
+        				pass_fail = false;
+      				}
+				}
+				// found object, send the angle back to the caller
+      			if(pass_fail == true){
+        			return ((consecutive_readings/2) + cnt);
+      			}
+    		}
+  		}
+	}
+
+	// return the heading in degrees to the most detectable object
+	return return_value;
+}
+
+
 
 
 

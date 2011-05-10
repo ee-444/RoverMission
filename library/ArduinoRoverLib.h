@@ -34,6 +34,14 @@
 #define MEDIUM_RANGE_IR_PIN	2
 #define SHORT_RANGE_IR_PIN	1
 
+//! Motor Duty Cycle constraints
+const uint8_t STRAIGHT_DUTY_CYCLE	= 125;
+const uint8_t MIN_DUTY_CYCLE 	 	= 50;
+const uint8_t MAX_DUTY_CYCLE		= 200;
+
+//! PID error update constraint
+const uint8_t PID_UPDATE_INTERVAL	= 10;
+
 //! Resolves linking errors when using arduino core in AVR Studio
 #include "cplusplushelper.h"
 

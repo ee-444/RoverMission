@@ -32,6 +32,11 @@
  * @endcode
  */
 
+ 
+/**
+ *	@class PID
+ * 	@brief A class for generic PID closed loop control
+ */
 template <typename T>
 class PID
 {
@@ -69,7 +74,7 @@ public:
 
 	//! Run time access to change the module gain
     /**
-     * @param float gain - of the new value
+     * @param gain - of the new value
      *
      * @ingroup PID-API
      */
@@ -77,7 +82,7 @@ public:
 	
 	//! Run time access to change the module gain
     /**
-     * @param float gain - of the new value
+     * @param gain - of the new value
      *
      * @ingroup PID-API
      */
@@ -85,7 +90,7 @@ public:
 	
 	//! Run time access to change the module gain
     /**
-     * @param float gain - of the new value
+     * @param gain - of the new value
      *
      * @ingroup PID-API
      */
@@ -117,7 +122,7 @@ public:
 
 	//! Change the setpoint for the module calculation
     /**
-     * @param T input - the desired setting for the device (templated to the same type as the object)
+     * @param input - the desired setting for the device (templated to the same type as the object)
      *
      * @ingroup PID-API
      */
@@ -133,8 +138,8 @@ public:
 	
 	//! Find out how far the system is from the setpoint
     /**
-     * @param T input - the current reading of the measurement device(templated to the same type as the object)
-     * @param T max_error = 0 - A limitation on the amount of acceptable error (passing a parameter will overwrite)
+     * @param input - the current reading of the measurement device(templated to the same type as the object)
+     * @param max_error = 0 - A limitation on the amount of acceptable error (passing a parameter will overwrite)
 	 *
      * @ingroup PID-API
      */

@@ -12,7 +12,7 @@
  * @see 	__
  * @image 	__ "Caption for the image"
  *
- * @example	HMC6352compass
+ * @example	compass
  *	An example of how to build and use the HMC6352compass object
  * @code
  * #include "ArduinoRoverLib.h"
@@ -32,6 +32,11 @@
  * @endcode
  */
 
+ 
+/**
+ *	@class HMC6352compass
+ * 	@brief A class for the HMC6352compass digital compass
+ */
 class HMC6352compass
 {
 private:

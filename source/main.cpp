@@ -1,13 +1,13 @@
 
 #include "main.h"
 
-// Need to test on hardware
+// Get heading from our compass
 HMC6352compass compass;
-// Need to test on hardware
-PID <double>pid(0.9, 0.01, 1.0);
-
+Mission mission;
+// Need to test on hardware 
+//PID <double>pid(0.9, 0.01, 1.0);
 // Used elsewhere - should be working
-EEPROMClass EEPROM;
+//EEPROMClass EEPROM;
 // Objects for the left and right motors.  PWM frequency is 64kHz
 AF_DCMotor motor_l(3, MOTOR12_64KHZ);
 AF_DCMotor motor_r(4, MOTOR12_64KHZ);
@@ -15,15 +15,18 @@ AF_DCMotor motor_r(4, MOTOR12_64KHZ);
 AF_Stepper motor_s(200, 1);
 
 // array to story the objects found in a room
-//uint16_t room_map1[200];
-//uint16_t room_map2[200];
+uint16_t room_map1[200];
+uint16_t room_map2[200];
 // array of the plaque angles from home
-//uint16_t angle_map[5]; 
+uint16_t dist_map[5]; 
+uint16_t angle_map[5]; 
 
 Cmissionconsole debug;
 
 uint16_t dist_map9[]	= {183,91,183};
 uint16_t angle_map9[] = {50,40,29};
+
+uint16_t lr_dist, mr_dist;
 
 int main(void)
 {
@@ -31,36 +34,196 @@ int main(void)
 	init();
 	Serial.begin(57600);
 	analogReference(EXTERNAL);
+
 	// This is the power up offset from fake_0
 	uint16_t heading_offset = compass.getHeading();
 	Serial.println("Starting!!");
+	//while(1);
 	//compass.enterCalibration();
-
 	//goStraight(20000);
 
-	//while(1);
+	while(1){
+		lr_dist = mission.irDistance(LONG_RANGE_IR_PIN);
+		//mr_dist = mission.irDistance(MEDIUM_RANGE_IR_PIN);
+		
+		Serial.print("long range - ");
+		Serial.println(lr_dist);
+		//Serial.print('\t');
+		//Serial.print("medium range - ");
+		//Serial.println(mr_dist);
+		//Serial.println('\n');
+
+		delay(500);
+		
+	}
+	
+	mission.scanEnvironment(room_map1);
+
+	delay(5000);
+	
+	mission.scanEnvironment(room_map2);
+
+	mission.analyzeRoom(room_map1, room_map2, dist_map, angle_map);
+	
+	// get to plaque 1
+	
+	if (angle_map[0] > 0){
+		// we have somewhere to go
+		mission.adjustHeading(angle_map[0]+heading_offset);
+		mission.adjustScanPlatform(angle_map[0]/18);
+		do {
+
+					
+
+		}while (mission.irDistance(SHORT_RANGE_IR_PIN) > 30);
+	}
+	else{
+		// failed attempt
+
+	} 
+
+	
+	for (uint8_t plaque_num = 1; plaque_num < 5; plaque_num++){
+
+		//! Execute the mission
+
+	}
+
+
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	static bool reverse = 0;
+	static uint8_t move = 0;
+	// Test stepper
+	
+	while(1){
+		if (reverse){
+			move = mission.adjustScanPlatform(0);
+			mission.adjustScanPlatform(move-1,1);
+			if (mission.adjustScanPlatform(0) == 0){
+				reverse = 0;
+			}
+		}
+		else{
+			uint8_t move = mission.adjustScanPlatform(0);
+			mission.adjustScanPlatform(move+1,1);
+			if (mission.adjustScanPlatform(0) == 199){
+				reverse = 1;
+			}
+		}
+	}
+
+	
+	
+	while(1){
+		lr_dist = mission.irDistance(LONG_RANGE_IR_PIN);
+		mr_dist = mission.irDistance(MEDIUM_RANGE_IR_PIN);
+		
+		Serial.print("long range - ");
+		Serial.print(lr_dist);
+		Serial.print('\t');
+		Serial.print("medium range - ");
+		Serial.println(mr_dist);
+		//Serial.println('\n');
+
+		delay(500);
+		
+	}
 	
 	// face first plaque
-	adjustHeading((heading_offset+(angle_map9[0]*10)));
+	mission.adjustHeading((heading_offset+(angle_map9[0]*10)));
 
 	//adjustScanPlatform(static_cast<float>(angle_map9[0])/1.8);
 
 	// go to first plaque
-	goStraight((dist_map9[0]/83)*10000);
+	mission.goStraight((dist_map9[0]/83)*10000);
 
 	//stopRobot();
 
 	uint16_t new_distance, new_angle;
 
 	// find second plaque
-	findPlaqueDistanceAngle(dist_map9, angle_map9, 2, new_distance, new_angle);
+	mission.findPlaqueDistanceAngle(dist_map9, angle_map9, 2, new_distance, new_angle);
 
 	Serial.print("new_angle = ");
 	Serial.println(new_angle);
 	Serial.print("new_distance = ");
 	Serial.println(new_distance);
 	// face second plaque
-	adjustHeading(1800-(new_angle*10));
+	mission.adjustHeading(1800-(new_angle*10));
 
 	//adjustScanPlatform(static_cast<float>(new_angle)/1.8);
 
@@ -68,7 +231,7 @@ int main(void)
 	Serial.print("straight time = ");
 	uint16_t tmp_time = (new_distance/83)*10000;
 	Serial.println(tmp_time);
-	goStraight(tmp_time);
+	mission.goStraight(tmp_time);
 
 	// face 2nd plaque - head on
 	
@@ -77,27 +240,27 @@ int main(void)
 	Serial.print("offset_angle = ");
 	Serial.println(asdf);
 	uint16_t tmp_angle = compass.getHeading();
-	adjustHeading(tmp_angle+asdf);
+	mission.adjustHeading(tmp_angle+asdf);
 	delay(3000);
 	Serial.print("face plaque = ");
 	Serial.println(tmp_angle);
 	tmp_angle = compass.getHeading();
-	adjustHeading(1800+tmp_angle);
+	mission.adjustHeading(1800+tmp_angle);
 	delay(3000);
 	// find 3rd plaque
-	findPlaqueDistanceAngle(dist_map9, angle_map9, 3, new_distance, new_angle);
+	mission.findPlaqueDistanceAngle(dist_map9, angle_map9, 3, new_distance, new_angle);
 	Serial.print("third plaque angle = ");
 	Serial.println(new_angle);
 	// turn to third plaque
 	tmp_angle = compass.getHeading();
-	adjustHeading((1800-(new_angle*10))+tmp_angle);
+	mission.adjustHeading((1800-(new_angle*10))+tmp_angle);
 
 	//adjustScanPlatform(static_cast<float>(new_angle)/1.8);
 	Serial.print("third runtime = ");
 	tmp_time = (new_distance/83)*10000;
 	Serial.println(tmp_time);
 	// go to third plaque
-	goStraight(tmp_time);
+	mission.goStraight(tmp_time);
 
 	//delay(3000);
 
@@ -110,8 +273,8 @@ int main(void)
 	
 	// testing for IR lab
 	while(1){
-		debug.longRangeIR(irDistance(LONG_RANGE_IR_PIN));
-		debug.mediumRangeIR(irDistance(MEDIUM_RANGE_IR_PIN));
+		debug.longRangeIR(mission.irDistance(LONG_RANGE_IR_PIN));
+		debug.mediumRangeIR(mission.irDistance(MEDIUM_RANGE_IR_PIN));
 		delay(100);
 	}
 
@@ -127,7 +290,7 @@ int main(void)
 	//analyzeRoom(room_map1, room_map2, angle_map);
 
 
-	int16_t tmp_heading = adjustScanPlatform(1) * 18;
+	int16_t tmp_heading = mission.adjustScanPlatform(1) * 18;
 
 	tmp_heading += heading_offset;
 	
@@ -139,22 +302,22 @@ int main(void)
 
 	heading_offset = tmp_heading;
 
-	adjustScanPlatform(0, 1);
+	mission.adjustScanPlatform(0, 1);
 
 // ******************************************************************
 
 // fake out
 
-	motor_r.setSpeed(150);
-	motor_l.setSpeed(150);
+	//motor_r.setSpeed(150);
+	//motor_l.setSpeed(150);
 
-	motor_l.run(FORWARD);
-	motor_r.run(FORWARD);
+	//motor_l.run(FORWARD);
+	//motor_r.run(FORWARD);
 	
 	delay(10000);
 
-	motor_l.run(RELEASE);
-	motor_r.run(RELEASE);
+	//motor_l.run(RELEASE);
+	//motor_r.run(RELEASE);
 
 	while(1);
 	
@@ -162,24 +325,24 @@ int main(void)
 //*******************************************************************	
 	
 	
-	uint8_t ad_res = pgm_read_word(&medium_range_data[readADC(MEDIUM_RANGE_IR_PIN)]);
+	uint8_t ad_res = pgm_read_word(&medium_range_data[mission.readADC(MEDIUM_RANGE_IR_PIN)]);
 	
-	motor_r.setSpeed(150);
-	motor_l.setSpeed(150);
+	//motor_r.setSpeed(150);
+	//motor_l.setSpeed(150);
 
-	motor_l.run(FORWARD);
-	motor_r.run(FORWARD);
+	//motor_l.run(FORWARD);
+	//motor_r.run(FORWARD);
 
 	uint8_t another_adc;
 
 	while (ad_res > 20){
 	
-		another_adc = pgm_read_word(&medium_range_data[readADC(MEDIUM_RANGE_IR_PIN)]);
+		another_adc = pgm_read_word(&medium_range_data[mission.readADC(MEDIUM_RANGE_IR_PIN)]);
 		
 		if (another_adc > ad_res){
 			// fallen and I cant get up
-			motor_l.run(RELEASE);
-			motor_r.run(RELEASE);
+			//motor_l.run(RELEASE);
+			//motor_r.run(RELEASE);
 			
 			tmp_heading = heading_offset - 5*18;
 
@@ -192,8 +355,8 @@ int main(void)
 			heading_offset = tmp_heading;
 
 			for (int i = 0; i < 10; i++){
-				adjustScanPlatform(i, 1);
-				uint8_t ad_val = pgm_read_word(&medium_range_data[readADC(MEDIUM_RANGE_IR_PIN)]);
+				mission.adjustScanPlatform(i, 1);
+				uint8_t ad_val = pgm_read_word(&medium_range_data[mission.readADC(MEDIUM_RANGE_IR_PIN)]);
 				if(ad_val > ad_res){
 
 				}
@@ -204,13 +367,13 @@ int main(void)
 						tmp_heading -= 3600;
 					}
 					//turnToFace(tmp_heading);
-					adjustScanPlatform(i,1);
+					mission.adjustScanPlatform(i,1);
 					heading_offset = tmp_heading;
 					another_adc = ad_val;
-					motor_r.setSpeed(150);
-					motor_l.setSpeed(150);
-					motor_l.run(FORWARD);
-					motor_r.run(FORWARD);
+					//motor_r.setSpeed(150);
+					//motor_l.setSpeed(150);
+					//motor_l.run(FORWARD);
+					//motor_r.run(FORWARD);
 					i = 10;
 				}
 			}
@@ -218,11 +381,8 @@ int main(void)
 		ad_res = another_adc;
 	}
 
-	motor_l.run(RELEASE);
-	motor_r.run(RELEASE);
-
-
-
+	//motor_l.run(RELEASE);
+	//motor_r.run(RELEASE);
 
 
 	
